@@ -1,0 +1,145 @@
+<div class="page">
+  <header class="header">
+    <div class="titleBlock">
+      <h1>Data Engineering</h1>
+      <p class="subtle">
+        Upload CSV/JSON, apply transformations, and browse version history.
+      </p>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2>Upload dataset</h2>
+    <div class="grid2">
+      <label class="field">
+        <span>Name</span>
+        <input [ngModel]="uploadName()" (ngModelChange)="uploadName.set($event)" />
+      </label>
+
+      <label class="field">
+        <span>Format</span>
+        <select
+          [ngModel]="uploadFormat()"
+          (ngModelChange)="uploadFormat.set($event)"
+        >
+          <option value="csv">CSV</option>
+          <option value="json">JSON</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="row">
+      <input type="file" (change)="onFilePicked($event)" />
+      <button class="primary" (click)="upload()" [disabled]="busy()">
+        Upload
+      </button>
+    </div>
+
+    <div class="meta" *ngIf="datasetId()">
+      <div><strong>Dataset</strong>: <code>{{ datasetId() }}</code></div>
+      <div>
+        <strong>Current version</strong>:
+        <code>{{ currentVersionId() }}</code>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" *ngIf="datasetId()">
+    <div class="cardHeader">
+      <h2>Transform</h2>
+      <button class="ghost" (click)="refreshTransformations()" [disabled]="busy()">
+        Refresh transformations
+      </button>
+    </div>
+
+    <div class="grid2">
+      <label class="field">
+        <span>Transformation</span>
+        <select
+          [ngModel]="selectedTransformationType()"
+          (ngModelChange)="selectedTransformationType.set($event)"
+        >
+          <option *ngFor="let t of transformations()" [value]="t.type">
+            {{ t.type }}
+          </option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span>Output format (optional)</span>
+        <select
+          [ngModel]="outputFormat()"
+          (ngModelChange)="outputFormat.set($event)"
+        >
+          <option value="">(keep)</option>
+          <option value="csv">csv</option>
+          <option value="json">json</option>
+        </select>
+      </label>
+    </div>
+
+    <label class="field">
+      <span>Parameters (JSON)</span>
+      <textarea
+        rows="6"
+        [ngModel]="paramsJson()"
+        (ngModelChange)="paramsJson.set($event)"
+        spellcheck="false"
+      ></textarea>
+    </label>
+
+    <div class="row">
+      <button class="primary" (click)="applyOne()" [disabled]="!canApply()">
+        Apply (creates new version)
+      </button>
+    </div>
+  </section>
+
+  <section class="card" *ngIf="datasetId()">
+    <div class="cardHeader">
+      <h2>Version history</h2>
+      <button class="ghost" (click)="refreshVersions()" [disabled]="busy()">
+        Refresh
+      </button>
+    </div>
+
+    <div class="versions" *ngIf="versions().length; else noVersions">
+      <button
+        class="version"
+        *ngFor="let v of versions()"
+        [class.active]="v.id === currentVersionId()"
+        (click)="setCurrentVersion(v.id)"
+        type="button"
+      >
+        <div class="versionTop">
+          <div class="versionNum">v{{ v.versionNumber }}</div>
+          <div class="versionMeta">
+            <span class="pill">{{ v.format }}</span>
+            <span class="time">{{ v.createdAt }}</span>
+          </div>
+        </div>
+        <div class="versionBottom">
+          <div class="mono"><strong>ID</strong>: {{ v.id }}</div>
+          <div class="mono" *ngIf="v.createdFromVersionId">
+            <strong>From</strong>: {{ v.createdFromVersionId }}
+          </div>
+          <div class="mono" *ngIf="v.transformation">
+            <strong>Step</strong>: {{ v.transformation.type }}
+          </div>
+        </div>
+      </button>
+    </div>
+
+    <ng-template #noVersions>
+      <p class="subtle">No versions yet.</p>
+    </ng-template>
+
+    <p class="subtle hint">
+      Revert is done by selecting an older version as “current”, then applying more
+      transformations from there (history stays intact).
+    </p>
+  </section>
+
+  <div class="error" *ngIf="error()">{{ error() }}</div>
+</div>
+
