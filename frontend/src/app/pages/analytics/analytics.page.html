@@ -1,0 +1,39 @@
+<div class = "page">
+    <header class = "header">
+        <div class = "titleBlock">
+            <h1>Analytics</h1>
+            <p class = "subtle">Preview dataset versions and connect them to Power Bi.</p>
+        </div>
+    </header>
+    
+    <section class = "card">
+        <h2>Select dataset</h2>
+        <select [(ngModel)] = "selectedDataset" (ngModelChange) = "onDatasetChange($event)">
+            <option value = "" disabled selected>Select a dataset</option>
+            <option *ngFor = "let d of datasets" [value] = "d.id">{{d.name}} - {{d.id}}</option>
+        </select>
+    </section>
+
+    <section class = "card" *ngIf = "versions.length">
+        <h2>Select version</h2>
+        <select [(ngModel)] = "selectedVersion" (ngModelChange) = "onVersionChange($event)">
+            <option value = "" disabled selected>Select a version</option>
+            <option *ngFor = "let v of versions" [value] = "v.id"> v{{v.versionNumber}} - {{v.id}}
+            </option>
+        </select>
+    </section>
+
+    <section class = "card" *ngIf = "preview">
+        <h2>Preview</h2>
+        <pre>{{preview | json}}</pre>
+
+        <div class = "row">
+            <input class = "mono" style - "width:100%" [value] = powerBiUrl" readonly />
+            <button class = "primary" (click) = "copyUrl()">Copy PowerBI URL</button>
+        </div>
+
+        <p class = "subtle hint">
+            past this URL into Power BI Desktop -> Get Data -> Web
+        </p>
+    </section>
+</div>

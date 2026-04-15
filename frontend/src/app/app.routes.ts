@@ -13,4 +13,9 @@ export const routes: Routes = [
         (m) => m.DataEngineeringPage
       )
   }
+  {
+    path: 'analytics',
+    loadComponent: () =>
+      import('./pages/analytics/analytics.page').then(m => m.AnalyticsPage)
+  }
 ];
