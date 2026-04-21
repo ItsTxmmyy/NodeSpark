@@ -2,3 +2,7 @@
 .venv/
 venv/
 env/
+
+# Local environment files
+.env
+backend/.env

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Tabular transformation engine used by /pipelines/apply."""
+
 import io
 import json
 from typing import Any, Dict, Iterable, Literal, Optional, Tuple
@@ -13,6 +15,7 @@ DatasetFormat = Literal["csv", "json"]
 
 
 def _df_from_bytes(data: bytes, fmt: DatasetFormat) -> pd.DataFrame:
+    """Deserialize incoming bytes into a pandas DataFrame."""
     if fmt == "json":
         raw = json.loads(data.decode("utf-8"))
         if isinstance(raw, dict) and "records" in raw:
@@ -26,6 +29,7 @@ def _df_from_bytes(data: bytes, fmt: DatasetFormat) -> pd.DataFrame:
 
 
 def _df_to_bytes(df: pd.DataFrame, fmt: DatasetFormat) -> bytes:
+    """Serialize DataFrame back to bytes in requested format."""
     if fmt == "json":
         records = df.to_dict(orient="records")
         return json.dumps(records, indent=2, ensure_ascii=False).encode("utf-8")
@@ -36,6 +40,7 @@ def _df_to_bytes(df: pd.DataFrame, fmt: DatasetFormat) -> bytes:
 
 
 def transform_deduplicate(df: pd.DataFrame, parameters: Dict[str, Any]) -> pd.DataFrame:
+    """Remove duplicate rows, optionally scoped to selected columns."""
     subset = parameters.get("subset")
     keep = parameters.get("keep", "first")
     if subset is not None and not isinstance(subset, list):
@@ -46,6 +51,7 @@ def transform_deduplicate(df: pd.DataFrame, parameters: Dict[str, Any]) -> pd.Da
 
 
 def transform_null_handling(df: pd.DataFrame, parameters: Dict[str, Any]) -> pd.DataFrame:
+    """Drop or fill null-like values on selected columns."""
     strategy = parameters.get("strategy", "remove")
     columns = parameters.get("columns")
     if columns is not None and not isinstance(columns, list):
@@ -67,6 +73,7 @@ def transform_null_handling(df: pd.DataFrame, parameters: Dict[str, Any]) -> pd.
 
 
 def transform_normalize(df: pd.DataFrame, parameters: Dict[str, Any]) -> pd.DataFrame:
+    """Trim and/or normalize string casing for selected columns."""
     columns = parameters.get("columns")
     if columns is not None and not isinstance(columns, list):
         raise ValueError("normalize.columns must be a list of column names")
@@ -100,6 +107,7 @@ def apply_pipeline(
     steps: Iterable[Tuple[str, Dict[str, Any]]],
     output_format: Optional[DatasetFormat] = None,
 ) -> Tuple[bytes, DatasetFormat, int]:
+    """Apply step sequence, then serialize final DataFrame."""
     df = _df_from_bytes(input_bytes, input_format)
 
     for step_type, params in steps:
@@ -110,7 +118,7 @@ def apply_pipeline(
         elif step_type == "normalize":
             df = transform_normalize(df, params)
         elif step_type == "convert_format":
-            # no-op on DF; conversion is handled at serialize time
+            # No DataFrame mutation needed. Format conversion happens on output serialization.
             pass
         else:
             raise ValueError(f"unknown transformation type: {step_type}")
@@ -128,8 +136,8 @@ def apply_single_step(
     output_format: Optional[DatasetFormat] = None,
 ) -> Tuple[bytes, DatasetFormat, int]:
     """
-    Applies exactly one transformation step and returns serialized output.
-    Used to ensure each step creates its own DatasetVersion.
+    Convenience wrapper for one-step pipelines.
+    Backend uses this so each requested step maps to one new DatasetVersion.
     """
     out_bytes, out_fmt, count = apply_pipeline(
         input_bytes=input_bytes,

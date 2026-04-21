@@ -1,49 +1,58 @@
 from __future__ import annotations
 
-import json
 import os
-from pathlib import Path
 from typing import Optional, Tuple
 
-from pydantic import TypeAdapter
+from bson import Binary
+from pymongo import MongoClient
 
 from .models import Dataset, DatasetVersion, StorageIndex
 
 
-def storage_root() -> Path:
-    return Path(os.environ.get("NODESPARK_STORAGE_DIR", Path(__file__).resolve().parent.parent / "storage")).resolve()
+_mongo_client: Optional[MongoClient] = None
 
 
-def index_path() -> Path:
-    return storage_root() / "index.json"
+def mongodb_uri() -> str:
+    return os.environ.get("MONGODB_URI", "mongodb://127.0.0.1:27017")
 
 
-def dataset_dir(dataset_id: str) -> Path:
-    return storage_root() / "datasets" / dataset_id
+def mongodb_db_name() -> str:
+    return os.environ.get("MONGODB_DB", "nodespark")
 
 
-def versions_dir(dataset_id: str) -> Path:
-    return dataset_dir(dataset_id) / "versions"
+def mongo_client() -> MongoClient:
+    global _mongo_client
+    if _mongo_client is None:
+        _mongo_client = MongoClient(mongodb_uri())
+    return _mongo_client
 
 
-def ensure_storage_dirs() -> None:
-    (storage_root() / "datasets").mkdir(parents=True, exist_ok=True)
+def mongo_db():
+    return mongo_client()[mongodb_db_name()]
 
 
-_index_adapter = TypeAdapter(StorageIndex)
+def ensure_mongo_indexes() -> None:
+    db = mongo_db()
+    db.datasets.create_index("id", unique=True)
+    db.versions.create_index("id", unique=True)
+    db.versions.create_index([("datasetId", 1), ("versionNumber", 1)], unique=True)
+    db.dataset_versions_data.create_index("versionId", unique=True)
 
 
 def load_index() -> StorageIndex:
-    ensure_storage_dirs()
-    p = index_path()
-    if not p.exists():
-        return StorageIndex()
-    return _index_adapter.validate_python(json.loads(p.read_text(encoding="utf-8")))
+    ensure_mongo_indexes()
+    db = mongo_db()
+    datasets_raw = list(db.datasets.find({}, {"_id": 0}))
+    versions_raw = list(db.versions.find({}, {"_id": 0}))
+    return StorageIndex(
+        datasets=[Dataset.model_validate(d) for d in datasets_raw],
+        versions=[DatasetVersion.model_validate(v) for v in versions_raw],
+    )
 
 
 def save_index(index: StorageIndex) -> None:
-    ensure_storage_dirs()
-    index_path().write_text(index.model_dump_json(indent=2), encoding="utf-8")
+    # In Mongo-only mode, writes happen at mutation time; index persistence is a no-op.
+    ensure_mongo_indexes()
 
 
 def next_version_number(index: StorageIndex, dataset_id: str) -> int:
@@ -65,29 +74,46 @@ def get_dataset(index: StorageIndex, dataset_id: str) -> Dataset:
     raise KeyError(f"dataset not found: {dataset_id}")
 
 
-def version_file_path(dataset_id: str, version_id: str, fmt: str) -> Path:
-    ext = "csv" if fmt == "csv" else "json"
-    return versions_dir(dataset_id) / f"{version_id}.{ext}"
-
-
 def write_version_file(dataset_id: str, version_id: str, fmt: str, data_bytes: bytes) -> str:
-    versions_dir(dataset_id).mkdir(parents=True, exist_ok=True)
-    p = version_file_path(dataset_id, version_id, fmt)
-    p.write_bytes(data_bytes)
-    return str(p)
+    ensure_mongo_indexes()
+    db = mongo_db()
+    db.dataset_versions_data.replace_one(
+        {"versionId": version_id},
+        {
+            "versionId": version_id,
+            "datasetId": dataset_id,
+            "format": fmt,
+            "data": Binary(data_bytes),
+        },
+        upsert=True,
+    )
+    return f"mongo://{version_id}"
 
 
 def read_version_file(version: DatasetVersion) -> bytes:
-    return Path(version.filePath).read_bytes()
+    db = mongo_db()
+    doc = db.dataset_versions_data.find_one({"versionId": version.id})
+    if not doc:
+        raise KeyError(f"version bytes not found: {version.id}")
+    return bytes(doc["data"])
 
 
 def add_dataset_and_version(index: StorageIndex, dataset: Dataset, version: DatasetVersion) -> StorageIndex:
+    ensure_mongo_indexes()
+    db = mongo_db()
+    db.datasets.replace_one({"id": dataset.id}, dataset.model_dump(), upsert=True)
+    db.versions.replace_one({"id": version.id}, version.model_dump(), upsert=True)
+
     index.datasets.append(dataset)
     index.versions.append(version)
     return index
 
 
 def add_version(index: StorageIndex, version: DatasetVersion) -> StorageIndex:
+    ensure_mongo_indexes()
+    db = mongo_db()
+    db.versions.replace_one({"id": version.id}, version.model_dump(), upsert=True)
+
     index.versions.append(version)
     return index
 

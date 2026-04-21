@@ -12,7 +12,7 @@ export const routes: Routes = [
       import('./pages/data-engineering/data-engineering.page').then(
         (m) => m.DataEngineeringPage
       )
-  }
+  },
   {
     path: 'analytics',
     loadComponent: () =>

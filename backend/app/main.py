@@ -1,9 +1,14 @@
 from __future__ import annotations
 
+"""FastAPI entrypoint for dataset upload, transforms, and version history."""
+
+import io
+import json
 from typing import List
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+import pandas as pd
 from uuid import uuid4
 
 from .models import (
@@ -22,6 +27,7 @@ from .storage import (
     get_version,
     load_index,
     next_version_number,
+    read_version_file,
     save_index,
     write_version_file,
 )
@@ -40,6 +46,7 @@ app.add_middleware(
 
 @app.get("/health")
 def health():
+    """Simple liveness endpoint for local/dev checks."""
     return {"ok": True}
 
 
@@ -83,20 +90,28 @@ def list_transformations():
     }
 
 
+@app.get("/datasets", response_model=List[Dataset])
+def list_datasets():
+    """List all datasets for selector UIs."""
+    index = load_index()
+    return sorted(index.datasets, key=lambda d: d.createdAt)
+
+
 @app.post("/datasets", response_model=CreateDatasetResponse)
 async def create_dataset(
     name: str,
     format: str,
     file: UploadFile = File(...),
 ):
+    """Create a new dataset and its initial version from uploaded file bytes."""
     fmt = format.lower()
     if fmt not in ("csv", "json"):
         raise HTTPException(status_code=400, detail="format must be csv or json")
 
     content = await file.read()
 
-    dataset_id = str(uuid4())
-    version_id = str(uuid4())
+    dataset_id = str(uuid4())  # Stable container id for all future versions.
+    version_id = str(uuid4())  # Immutable id of this specific snapshot.
 
     index = load_index()
     version_number = next_version_number(index, dataset_id)
@@ -121,12 +136,14 @@ async def create_dataset(
 
 @app.get("/datasets/{dataset_id}/versions", response_model=List[DatasetVersion])
 def list_versions(dataset_id: str):
+    """List all versions for a dataset, ordered by version number."""
     index = load_index()
     return sorted([v for v in index.versions if v.datasetId == dataset_id], key=lambda v: v.versionNumber)
 
 
 @app.get("/versions/{version_id}", response_model=DatasetVersion)
 def get_version_meta(version_id: str):
+    """Fetch metadata for one concrete version id."""
     index = load_index()
     try:
         return get_version(index, version_id)
@@ -136,17 +153,47 @@ def get_version_meta(version_id: str):
 
 @app.get("/versions/{version_id}/download")
 def download_version(version_id: str):
+    """Download raw bytes of a stored version (CSV/JSON)."""
     index = load_index()
     try:
         v = get_version(index, version_id)
     except KeyError as e:
         raise HTTPException(status_code=404, detail=str(e))
     # Return raw bytes; frontend can parse based on v.format
-    return open(v.filePath, "rb").read()
+    return read_version_file(v)
+
+
+@app.get("/powerbi/{version_id}")
+def powerbi_preview(version_id: str):
+    """Return version data as JSON records for analytics/PowerBI preview."""
+    index = load_index()
+    try:
+        version = get_version(index, version_id)
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+    raw = read_version_file(version)
+    if version.format == "json":
+        parsed = json.loads(raw.decode("utf-8"))
+        if isinstance(parsed, dict) and "records" in parsed:
+            parsed = parsed["records"]
+        if not isinstance(parsed, list):
+            raise HTTPException(status_code=400, detail="stored JSON must be a list of records")
+        return parsed
+
+    if version.format == "csv":
+        df = pd.read_csv(io.BytesIO(raw))
+        return df.to_dict(orient="records")
+
+    raise HTTPException(status_code=400, detail=f"unsupported format: {version.format}")
 
 
 @app.post("/pipelines/apply", response_model=ApplyPipelineResponse)
 def apply_transformation_pipeline(req: ApplyPipelineRequest):
+    """
+    Apply a step-by-step pipeline and create a new DatasetVersion per step.
+    The resulting versions form a parent/child lineage chain.
+    """
     index = load_index()
     try:
         input_version = get_version(index, req.inputVersionId)
@@ -154,7 +201,7 @@ def apply_transformation_pipeline(req: ApplyPipelineRequest):
         raise HTTPException(status_code=404, detail=str(e))
 
     current_version = input_version
-    current_bytes = open(current_version.filePath, "rb").read()
+    current_bytes = read_version_file(current_version)
     created_ids: List[str] = []
     applied_records: List[TransformationRecord] = []
 
@@ -175,6 +222,7 @@ def apply_transformation_pipeline(req: ApplyPipelineRequest):
         except ValueError as e:
             raise HTTPException(status_code=400, detail=str(e))
 
+        # Persist every step as a materialized version so history is inspectable/revertable.
         new_version_id = str(uuid4())
         version_number = next_version_number(index, current_version.datasetId)
         out_path = write_version_file(current_version.datasetId, new_version_id, out_fmt, out_bytes)
@@ -202,6 +250,7 @@ def apply_transformation_pipeline(req: ApplyPipelineRequest):
         created_ids.append(new_version_id)
         applied_records.append(record)
 
+        # Advance pipeline cursor so next step uses fresh output from this step.
         current_version = new_version
         current_bytes = out_bytes
 

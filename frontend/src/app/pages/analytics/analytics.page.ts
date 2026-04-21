@@ -33,14 +33,14 @@ export class AnalyticsPage {
         this.preview = null;
         this.selectedVersion = null;
 
-        this.http.get<any[]>(`${this.backend}/datsets/${datasetId}/versions`).subscribe( v => this.versions = v);
+        this.http.get<any[]>(`${this.backend}/datasets/${datasetId}/versions`).subscribe((v) => (this.versions = v));
     }
 
     onVersionChange(versionId: string) {
         this.selectedVersion = versionId;
         this.powerBiUrl = `${this.backend}/powerbi/${versionId}`;
 
-        this.http.ger<any[]>(this.powerBiUrl).subscribe(data => this.preview = data);
+        this.http.get<any[]>(this.powerBiUrl).subscribe((data: any[]) => (this.preview = data));
     }
 
     copyUrl() { 
