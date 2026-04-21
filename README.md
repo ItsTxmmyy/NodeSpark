@@ -1,26 +1,28 @@
 # NodeSpark
 
-NodeSpark is a simple **data engineering playground**:
+NodeSpark is a local **data engineering playground** for testing transformation pipelines on tabular data.
 
-- Upload a **CSV** or **JSON** dataset
-- Apply transformations (deduplicate, null handling, normalization, format conversion)
-- Every transformation creates a **new dataset version** with timestamps + lineage
+## What it does
 
-This repo currently contains:
+- Upload datasets in `csv` or `json`
+- Apply transformation steps (deduplicate, null handling, normalize, convert format)
+- Save every step as a **new dataset version** with lineage/history
+- Preview transformed output from the frontend analytics views
 
-- **FastAPI backend** in `backend/`
-- **Angular frontend** in `frontend/`
+## Project structure
 
-MongoDB-backed persistence (datasets, versions, transformation logs, users/roles) is planned, but the current dev build uses a lightweight local storage approach in the backend.
+- `backend/`: FastAPI service and storage/index logic
+- `frontend/`: Angular application
+- `sample-data/`: ready-to-upload sample files
 
 ## Requirements
 
-- **Python 3.14+**
-- **Node.js + npm** (for Angular)
+- Python `3.14+`
+- Node.js `18+` (or current LTS) and npm
 
-## Quick start (dev)
+## Local setup
 
-You run **two processes** in development: backend + frontend.
+You run two processes during development: backend and frontend.
 
 ### 1) Backend (FastAPI)
 
@@ -29,12 +31,21 @@ cd backend
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+cp .env.example .env
 ./run.sh
 ```
 
-Backend runs at `http://127.0.0.1:8000`.
+`./run.sh` automatically:
 
-Quick health check:
+- sets `PYTHONPATH` for the backend package
+- loads environment variables from `backend/.env` (if the file exists)
+- starts Uvicorn on port `8000`
+
+You do **not** need to manually `export` env vars when using `./run.sh`.
+
+Backend URL: `http://127.0.0.1:8000`
+
+Health check:
 
 ```bash
 curl http://127.0.0.1:8000/health
@@ -48,36 +59,33 @@ npm install
 npm start
 ```
 
-Frontend runs at `http://localhost:4200`.
+Frontend URL: `http://localhost:4200`
 
-## Using the app
+## Typical workflow
 
-Open the **Data Engineering** page in the browser and follow this workflow:
-
-1. **Upload dataset**
-   - Select format: `csv` or `json`
-   - Choose file
-   - Click **Upload**
-2. **Transform**
-   - Pick a transformation
-   - Paste transformation parameters as JSON
-   - Click **Apply** (creates a new version)
-3. **Version history**
-   - See versions with timestamps and the transformation applied
-   - “Revert” by selecting an older version, then applying transformations from there
+1. Open the app and navigate to the **Data Engineering** page
+2. Upload a `csv` or `json` dataset
+3. Select a transformation and provide parameters
+4. Apply pipeline steps (each step creates a new saved version)
+5. Review version history and continue from any previous version
 
 ## Sample data
 
-There is a sample dataset you can upload from the UI:
+Use `sample-data/nodespark_sample.csv` to quickly test:
 
-- `sample-data/nodespark_sample.csv`
-
-It includes duplicates, missing values, inconsistent casing, and extra whitespace so you can test transformations.
+- duplicates
+- null values
+- inconsistent casing
+- whitespace cleanup
 
 ## Backend API (high level)
 
-- `POST /datasets`: upload a dataset (creates dataset + v1)
-- `GET /transformations`: list available transformations + parameter schema
-- `POST /pipelines/apply`: apply one or more steps (each step creates its own new version)
-- `GET /datasets/{datasetId}/versions`: list version history
-- `GET /versions/{versionId}/download`: download dataset bytes for a version
+- `GET /health`: service liveness
+- `GET /transformations`: available transforms + parameter definitions
+- `POST /datasets`: create dataset + initial version
+- `GET /datasets`: list datasets
+- `GET /datasets/{dataset_id}/versions`: list dataset versions
+- `POST /pipelines/apply`: apply one or more transformation steps
+- `GET /versions/{version_id}`: fetch version metadata
+- `GET /versions/{version_id}/download`: download a stored version
+- `GET /powerbi/{version_id}`: JSON records preview for analytics integrations
