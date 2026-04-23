@@ -6,6 +6,8 @@ import io
 import json
 from typing import List
 
+import os
+
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 import pandas as pd
@@ -32,6 +34,7 @@ from .storage import (
     write_version_file,
 )
 from .transforms import apply_single_step
+from .powerbi_auth import get_report_embed_config
 
 app = FastAPI(title="NodeSpark Backend", version="0.1.0")
 
@@ -186,6 +189,40 @@ def powerbi_preview(version_id: str):
         return df.to_dict(orient="records")
 
     raise HTTPException(status_code=400, detail=f"unsupported format: {version.format}")
+
+
+@app.get("/powerbi/embed/{version_id}")
+def powerbi_embed_config(version_id: str):
+    """
+    Return Power BI embed configuration using Publish to Web URL.
+    
+    Set this environment variable:
+    - POWERBI_EMBED_URL: Your "Publish to Web" embed URL from Power BI Service
+    
+    To get the URL:
+    1. Go to Power BI Service (app.powerbi.com)
+    2. Open your report
+    3. File → Publish to Web
+    4. Copy the embed HTML or iframe src URL
+    """
+    embed_url = os.getenv("POWERBI_EMBED_URL")
+    
+    if not embed_url:
+        raise HTTPException(
+            status_code=500,
+            detail="Missing POWERBI_EMBED_URL environment variable. "
+                   "Go to Power BI Service → Your Report → File → Publish to Web"
+        )
+    
+    return {
+        "type": "report",
+        "embedUrl": embed_url,
+        "tokenType": 1,
+        "settings": {
+            "filterPaneEnabled": False,
+            "navContentPaneEnabled": True
+        }
+    }
 
 
 @app.post("/pipelines/apply", response_model=ApplyPipelineResponse)

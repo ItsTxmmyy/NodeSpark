@@ -48,6 +48,143 @@ input {
     width: 100%;
 }
 
+/* Filter Row */
+.filter-row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.filter-group {
+    flex: 1;
+    min-width: 150px;
+}
+
+.filter-group label {
+    display: block;
+    font-size: 12px;
+    color: #5b6472;
+    margin-bottom: 4px;
+}
+
+.filter-group select,
+.filter-group input {
+    width: 100%;
+}
+
+/* Data Table */
+.table-container {
+    overflow-x: auto;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+thead {
+    position: sticky;
+    top: 0;
+    background: #f8f9fa;
+    z-index: 1;
+}
+
+th {
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 2px solid #e5e8ef;
+    font-weight: 600;
+    color: #5b6472;
+    white-space: nowrap;
+}
+
+td {
+    padding: 8px 12px;
+    border-bottom: 1px solid #e5e8ef;
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+tr:hover {
+    background: #f8f9fa;
+}
+
+/* Secondary Button */
+button.secondary {
+    background: #f0f1f3;
+    color: #333;
+    border: 1px solid #d9deea;
+    border-radius: 12px;
+    padding: 10px 16px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+button.secondary:hover {
+    background: #e5e8ef;
+}
+
+/* View Toggle */
+.view-toggle {
+    display: flex;
+    gap: 8px;
+}
+
+.view-toggle button {
+    flex: 1;
+    padding: 12px 16px;
+    border: 1px solid #d9deea;
+    border-radius: 12px;
+    background: #fff;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.view-toggle button:hover {
+    background: #f8f9fa;
+}
+
+.view-toggle button.active {
+    background: #e8f4fd;
+    border-color: #0078d4;
+    color: #0078d4;
+}
+
+.view-toggle button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Power BI */
+.powerbi-setup {
+    padding: 16px;
+    background: #f8f9fa;
+    border-radius: 12px;
+}
+
+.powerbi-setup ol {
+    margin: 12px 0;
+    padding-left: 20px;
+}
+
+.powerbi-setup li {
+    margin: 8px 0;
+    color: #5b6472;
+}
+
+.powerbi-container iframe {
+    border-radius: 8px;
+}
+
 .row{
     display:flex;
     gap:12px;

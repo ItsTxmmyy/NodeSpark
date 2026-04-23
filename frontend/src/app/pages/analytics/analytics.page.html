@@ -2,7 +2,7 @@
     <header class = "header">
         <div class = "titleBlock">
             <h1>Analytics</h1>
-            <p class = "subtle">Preview dataset versions and connect them to Power Bi.</p>
+            <p class = "subtle">Preview dataset versions, filter data, and view Power Bi visualizations.</p>
         </div>
     </header>
     
@@ -23,7 +23,110 @@
         </select>
     </section>
 
-    <section class = "card" *ngIf = "preview">
+    <!-- View Toggle -->
+    <section class = "card" *ngIf = "preview || powerBiEmbedUrl">
+        <h2>View Mode</h2>
+        <div class = "view-toggle">
+            <button 
+                [class.active] = "viewMode === 'table'" 
+                (click) = "viewMode = 'table'">
+                📊 Data Table
+            </button>
+            <button 
+                [class.active] = "viewMode === 'powerbi'" 
+                (click) = "viewMode = 'powerbi'"
+                [disabled] = "!powerBiEmbedUrl">
+                📈 Power BI
+            </button>
+        </div>
+    </section>
+
+    <!-- Data Table View -->
+    <section class = "card" *ngIf = "viewMode === 'table' && filteredData.length">
+        <h2>Filter Data</h2>
+        <div class = "filter-row">
+            <div class = "filter-group">
+                <label>Search All Columns</label>
+                <input 
+                    type = "text" 
+                    [(ngModel)] = "searchTerm" 
+                    (ngModelChange) = "applyFilters()"
+                    placeholder = "Search..." 
+                />
+            </div>
+            <div class = "filter-group">
+                <label>Filter by Column</label>
+                <select [(ngModel)] = "filterColumn" (ngModelChange) = "applyFilters()">
+                    <option value = "">All Columns</option>
+                    <option *ngFor = "let col of columns" [value] = "col">{{col}}</option>
+                </select>
+            </div>
+            <div class = "filter-group" *ngIf = "filterColumn">
+                <label>Filter Value</label>
+                <input 
+                    type = "text" 
+                    [(ngModel)] = "filterValue" 
+                    (ngModelChange) = "applyFilters()"
+                    placeholder = "Enter value..." 
+                />
+            </div>
+            <button class = "secondary" (click) = "clearFilters()">Clear Filters</button>
+        </div>
+        <p class = "subtle">Showing {{filteredData.length}} of {{preview.length}} records</p>
+    </section>
+
+    <section class = "card" *ngIf = "viewMode === 'table' && filteredData.length">
+        <h2>Data</h2>
+        <div class = "table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th *ngFor = "let col of columns">{{col}}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor = "let row of filteredData">
+                        <td *ngFor = "let col of columns">{{row[col]}}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Power BI View -->
+    <section class = "card" *ngIf = "viewMode === 'powerbi'">
+        <h2>Power BI Visualization</h2>
+        
+        <div *ngIf = "!powerBiEmbedUrl" class = "powerbi-setup">
+            <p class = "subtle">To enable Power BI visualization:</p>
+            <ol>
+                <li>Publish your report to Power BI Service</li>
+                <li>Go to File → Publish to Web</li>
+                <li>Copy the embed URL</li>
+                <li>Add it to your .env file as POWERBI_EMBED_URL</li>
+            </ol>
+            <div class = "row">
+                <input 
+                    class = "mono" 
+                    style = "width:100%" 
+                    [(ngModel)] = "manualPowerBiUrl" 
+                    placeholder = "Paste Power BI embed URL here..."
+                />
+                <button class = "primary" (click) = "setPowerBiUrl()">Load</button>
+            </div>
+        </div>
+
+        <div *ngIf = "powerBiEmbedUrl" class = "powerbi-container">
+            <iframe 
+                [src] = "safePowerBiUrl" 
+                style = "width: 100%; height: 600px; border: none;"
+                allowfullscreen>
+            </iframe>
+        </div>
+    </section>
+
+    <!-- Fallback: JSON Preview -->
+    <section class = "card" *ngIf = "preview && !filteredData.length && viewMode === 'table'">
         <h2>Preview</h2>
         <pre>{{preview | json}}</pre>
 

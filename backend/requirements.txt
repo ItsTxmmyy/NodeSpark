@@ -4,4 +4,5 @@ pydantic
 python-multipart
 pandas
 pymongo
-
+msal
+requests
