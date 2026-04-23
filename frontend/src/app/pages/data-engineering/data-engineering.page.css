@@ -12,15 +12,44 @@
   margin-bottom: 20px;
 }
 
+.quickStats {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.statTile {
+  min-width: 180px;
+  border: 1px solid rgba(97, 128, 206, 0.42);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: rgba(8, 13, 30, 0.6);
+}
+
+.statTile span {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-soft);
+  margin-bottom: 4px;
+}
+
+.statTile strong,
+.statTile code {
+  color: #d9e7ff;
+}
+
 .titleBlock h1 {
   margin: 0;
   font-size: 28px;
-  letter-spacing: -0.02em;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
 }
 
 .subtle {
   margin: 6px 0 0;
-  color: #5b6472;
+  color: var(--text-soft);
   font-size: 14px;
 }
 
@@ -44,12 +73,15 @@
 }
 
 .card {
-  border: 1px solid #e5e8ef;
-  background: #fff;
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
   border-radius: 16px;
   padding: 16px;
   margin: 14px 0;
-  box-shadow: 0 1px 0 rgba(16, 24, 40, 0.02);
+  backdrop-filter: blur(12px);
+  box-shadow:
+    0 12px 40px rgba(2, 6, 23, 0.26),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .card h2 {
@@ -62,6 +94,33 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+}
+
+.chip {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  color: #b8ebff;
+  background: rgba(56, 189, 248, 0.1);
+  border-radius: 999px;
+  padding: 5px 9px;
+}
+
+.uiGrid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: 1.05fr 1fr;
+  align-items: start;
+}
+
+.historyPanel {
+  position: sticky;
+  top: 78px;
+}
+
+.actionRow input {
+  flex: 1 1 220px;
 }
 
 .grid2 {
@@ -77,17 +136,28 @@
 }
 .field span {
   font-size: 12px;
-  color: #5b6472;
+  color: #8ea3d1;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 input,
 select,
 textarea {
-  border: 1px solid #d9deea;
+  border: 1px solid rgba(97, 128, 206, 0.45);
   border-radius: 12px;
   padding: 10px 12px;
   font-size: 14px;
   outline: none;
+  background: rgba(8, 13, 30, 0.74);
+  color: var(--text);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: rgba(56, 189, 248, 0.85);
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
 }
 textarea {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
@@ -103,24 +173,31 @@ textarea {
 }
 
 button {
-  border: 1px solid #d9deea;
-  background: #fff;
+  border: 1px solid rgba(97, 128, 206, 0.45);
+  background: rgba(11, 19, 42, 0.82);
   border-radius: 12px;
   padding: 10px 12px;
   font-size: 14px;
   cursor: pointer;
+  color: var(--text);
+  transition: all 0.2s ease;
+}
+
+button:hover:not(:disabled) {
+  border-color: rgba(56, 189, 248, 0.7);
+  transform: translateY(-1px);
 }
 button:disabled {
-  opacity: 0.6;
+  opacity: 0.45;
   cursor: not-allowed;
 }
 button.primary {
-  border-color: #2b6cff;
-  background: #2b6cff;
+  border-color: rgba(56, 189, 248, 0.8);
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.9), rgba(139, 92, 246, 0.86));
   color: #fff;
 }
 button.ghost {
-  background: transparent;
+  background: rgba(8, 13, 30, 0.48);
 }
 
 .meta {
@@ -142,12 +219,14 @@ button.ghost {
   text-align: left;
   padding: 12px;
   border-radius: 14px;
-  background: #fff;
-  border: 1px solid #e5e8ef;
+  background: rgba(10, 16, 36, 0.82);
+  border: 1px solid rgba(97, 128, 206, 0.36);
 }
 .version.active {
-  border-color: #2b6cff;
-  box-shadow: 0 0 0 3px rgba(43, 108, 255, 0.12);
+  border-color: rgba(56, 189, 248, 0.86);
+  box-shadow:
+    0 0 0 3px rgba(56, 189, 248, 0.18),
+    0 8px 26px rgba(56, 189, 248, 0.14);
 }
 
 .versionTop {
@@ -166,15 +245,15 @@ button.ghost {
 }
 .pill {
   font-size: 12px;
-  border: 1px solid #d9deea;
+  border: 1px solid rgba(97, 128, 206, 0.42);
   padding: 4px 8px;
   border-radius: 999px;
-  color: #394150;
-  background: #fbfcff;
+  color: #c8d8ff;
+  background: rgba(56, 189, 248, 0.11);
 }
 .time {
   font-size: 12px;
-  color: #5b6472;
+  color: var(--text-soft);
 }
 
 .versionBottom {
@@ -184,7 +263,7 @@ button.ghost {
 }
 .mono {
   font-size: 12px;
-  color: #394150;
+  color: #c8d8ff;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
     "Courier New", monospace;
 }
@@ -195,9 +274,9 @@ button.ghost {
 
 .error {
   margin-top: 14px;
-  border: 1px solid #ffd1d1;
-  background: #fff5f5;
-  color: #8a1f1f;
+  border: 1px solid rgba(255, 107, 129, 0.45);
+  background: rgba(255, 107, 129, 0.14);
+  color: #ffd3db;
   padding: 10px 12px;
   border-radius: 12px;
 }
@@ -205,6 +284,12 @@ button.ghost {
 @media (max-width: 900px) {
   .grid2 {
     grid-template-columns: 1fr;
+  }
+  .uiGrid {
+    grid-template-columns: 1fr;
+  }
+  .historyPanel {
+    position: static;
   }
   .header {
     flex-direction: column;

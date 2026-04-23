@@ -17,6 +17,7 @@ from .models import (
     CreateDatasetResponse,
     Dataset,
     DatasetVersion,
+    RenameVersionRequest,
     TransformationRecord,
     TransformationType,
     now_iso,
@@ -29,6 +30,7 @@ from .storage import (
     next_version_number,
     read_version_file,
     save_index,
+    update_version,
     write_version_file,
 )
 from .transforms import apply_single_step
@@ -264,4 +266,55 @@ def apply_transformation_pipeline(req: ApplyPipelineRequest):
         createdVersionIds=created_ids,
         stepsApplied=applied_records,
     )
+
+
+@app.post("/versions/{version_id}/revert", response_model=DatasetVersion)
+def revert_to_version(version_id: str):
+    """
+    Create a new latest version by cloning bytes from an existing version.
+    This preserves history like GitHub: old versions stay unchanged, and revert
+    becomes a new snapshot at the end of the timeline.
+    """
+    index = load_index()
+    try:
+        source_version = get_version(index, version_id)
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+    source_bytes = read_version_file(source_version)
+    created_at = now_iso()
+    new_version_id = str(uuid4())
+    new_version_number = next_version_number(index, source_version.datasetId)
+    out_path = write_version_file(source_version.datasetId, new_version_id, source_version.format, source_bytes)
+
+    new_version = DatasetVersion(
+        id=new_version_id,
+        datasetId=source_version.datasetId,
+        versionNumber=new_version_number,
+        format=source_version.format,  # type: ignore[arg-type]
+        createdAt=created_at,
+        createdFromVersionId=source_version.id,
+        recordCount=source_version.recordCount,
+        filePath=out_path,
+    )
+
+    add_version(index, new_version)
+    save_index(index)
+    return new_version
+
+
+@app.patch("/versions/{version_id}/name", response_model=DatasetVersion)
+def rename_version(version_id: str, req: RenameVersionRequest):
+    """Assign or clear a human-friendly name for a version."""
+    index = load_index()
+    try:
+        version = get_version(index, version_id)
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+    name = req.versionName.strip()
+    version.versionName = name if name else None
+    update_version(index, version)
+    save_index(index)
+    return version
 

@@ -29,6 +29,7 @@ export class DataEngineeringPage {
   protected readonly selectedTransformationType = signal<string>('deduplicate');
   protected readonly paramsJson = signal<string>('{}');
   protected readonly outputFormat = signal<DatasetFormat | ''>('');
+  protected readonly renameVersionName = signal('');
 
   protected readonly versions = signal<
     Array<{
@@ -37,11 +38,15 @@ export class DataEngineeringPage {
       versionNumber: number;
       format: DatasetFormat;
       createdAt: string;
+      versionName?: string;
       createdFromVersionId?: string;
       recordCount?: number;
       transformation?: { type: string; parameters: Record<string, unknown>; timestamp: string };
     }>
   >([]);
+  protected readonly versionsNewestFirst = computed(() =>
+    [...this.versions()].sort((a, b) => b.versionNumber - a.versionNumber)
+  );
 
   protected readonly busy = signal(false);
   protected readonly error = signal<string | null>(null);
@@ -49,6 +54,9 @@ export class DataEngineeringPage {
   protected readonly canApply = computed(() => {
     return !!this.currentVersionId() && !this.busy();
   });
+  protected readonly selectedVersion = computed(() =>
+    this.versions().find((v) => v.id === this.currentVersionId()) ?? null
+  );
 
   constructor(private readonly api: DataEngineeringApiService) {
     this.refreshTransformations().catch(() => {});
@@ -91,6 +99,8 @@ export class DataEngineeringPage {
     if (!did) return;
     const list = await this.api.listVersions(did);
     this.versions.set(list);
+    const current = list.find((v) => v.id === this.currentVersionId());
+    this.renameVersionName.set(current?.versionName ?? '');
   }
 
   protected async applyOne() {
@@ -127,6 +137,56 @@ export class DataEngineeringPage {
 
   protected setCurrentVersion(versionId: string) {
     this.currentVersionId.set(versionId);
+    const selected = this.versions().find((v) => v.id === versionId);
+    this.renameVersionName.set(selected?.versionName ?? '');
+  }
+
+  protected async revertSelectedVersion() {
+    this.error.set(null);
+    const versionId = this.currentVersionId();
+    if (!versionId) {
+      this.error.set('Select a version to revert first.');
+      return;
+    }
+
+    const selected = this.versions().find((v) => v.id === versionId);
+    const versionLabel = selected ? `v${selected.versionNumber}` : versionId;
+    const confirmed = window.confirm(
+      `Revert to ${versionLabel}? This will create a new latest version and keep full history.`
+    );
+    if (!confirmed) return;
+
+    this.busy.set(true);
+    try {
+      const created = await this.api.revertVersion(versionId);
+      this.currentVersionId.set(created.id);
+      await this.refreshVersions();
+    } catch (e) {
+      this.error.set(this.api.errToMessage(e));
+    } finally {
+      this.busy.set(false);
+    }
+  }
+
+  protected async renameSelectedVersion() {
+    this.error.set(null);
+    const versionId = this.currentVersionId();
+    if (!versionId) {
+      this.error.set('Select a version to rename first.');
+      return;
+    }
+
+    this.busy.set(true);
+    try {
+      const updated = await this.api.renameVersion(versionId, this.renameVersionName());
+      this.currentVersionId.set(updated.id);
+      this.renameVersionName.set(updated.versionName ?? '');
+      await this.refreshVersions();
+    } catch (e) {
+      this.error.set(this.api.errToMessage(e));
+    } finally {
+      this.busy.set(false);
+    }
   }
 }
 

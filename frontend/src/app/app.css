@@ -2,8 +2,7 @@
 :host {
   display: block;
   min-height: 100dvh;
-  background: #f6f8fc;
-  color: #111827;
+  color: var(--text);
   font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial,
     sans-serif;
 }
@@ -21,14 +20,18 @@
   justify-content: space-between;
   gap: 16px;
   padding: 14px 16px;
-  border-bottom: 1px solid #e5e8ef;
-  background: rgba(246, 248, 252, 0.9);
-  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(82, 116, 214, 0.35);
+  background: rgba(8, 13, 30, 0.78);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 12px 30px rgba(2, 6, 23, 0.28);
 }
 
 .brand {
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 13px;
+  color: #d8e8ff;
 }
 
 .nav {
@@ -38,14 +41,23 @@
 
 .nav a {
   text-decoration: none;
-  color: #394150;
-  border: 1px solid transparent;
+  color: var(--text-soft);
+  border: 1px solid rgba(82, 116, 214, 0.2);
   padding: 8px 10px;
   border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.nav a:hover {
+  color: var(--text);
+  border-color: rgba(56, 189, 248, 0.48);
+  background: rgba(56, 189, 248, 0.08);
 }
 
 .nav a.active {
-  border-color: #d9deea;
-  background: #fff;
+  color: #ffffff;
+  border-color: rgba(56, 189, 248, 0.68);
+  background: linear-gradient(120deg, rgba(56, 189, 248, 0.24), rgba(139, 92, 246, 0.2));
+  box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.2) inset;
 }
 

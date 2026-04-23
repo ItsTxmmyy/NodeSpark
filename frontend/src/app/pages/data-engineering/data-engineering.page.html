@@ -6,137 +6,152 @@
         Upload CSV/JSON, apply transformations, and browse version history.
       </p>
     </div>
+    <div class="quickStats" *ngIf="datasetId()">
+      <div class="statTile">
+        <span>Dataset</span>
+        <code>{{ datasetId() }}</code>
+      </div>
+      <div class="statTile">
+        <span>Versions</span>
+        <strong>{{ versions().length }}</strong>
+      </div>
+    </div>
   </header>
-
-  <section class="card">
-    <h2>Upload dataset</h2>
+  <section class="card uploadPanel">
+    <div class="cardHeader">
+      <h2>Ingest Dataset</h2>
+      <span class="chip">Pipeline entrypoint</span>
+    </div>
     <div class="grid2">
       <label class="field">
         <span>Name</span>
         <input [ngModel]="uploadName()" (ngModelChange)="uploadName.set($event)" />
       </label>
-
       <label class="field">
         <span>Format</span>
-        <select
-          [ngModel]="uploadFormat()"
-          (ngModelChange)="uploadFormat.set($event)"
-        >
+        <select [ngModel]="uploadFormat()" (ngModelChange)="uploadFormat.set($event)">
           <option value="csv">CSV</option>
           <option value="json">JSON</option>
         </select>
       </label>
     </div>
-
     <div class="row">
       <input type="file" (change)="onFilePicked($event)" />
-      <button class="primary" (click)="upload()" [disabled]="busy()">
-        Upload
-      </button>
+      <button class="primary" (click)="upload()" [disabled]="busy()">Upload Dataset</button>
     </div>
-
     <div class="meta" *ngIf="datasetId()">
       <div><strong>Dataset</strong>: <code>{{ datasetId() }}</code></div>
-      <div>
-        <strong>Current version</strong>:
-        <code>{{ currentVersionId() }}</code>
+      <div><strong>Current version</strong>: <code>{{ currentVersionId() }}</code></div>
+    </div>
+  </section>
+
+  <section class="uiGrid" *ngIf="datasetId()">
+    <section class="card">
+      <div class="cardHeader">
+        <h2>Transform Engine</h2>
+        <button class="ghost" (click)="refreshTransformations()" [disabled]="busy()">
+          Refresh transformations
+        </button>
       </div>
-    </div>
+      <div class="grid2">
+        <label class="field">
+          <span>Transformation</span>
+          <select
+            [ngModel]="selectedTransformationType()"
+            (ngModelChange)="selectedTransformationType.set($event)"
+          >
+            <option *ngFor="let t of transformations()" [value]="t.type">
+              {{ t.type }}
+            </option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Output format (optional)</span>
+          <select [ngModel]="outputFormat()" (ngModelChange)="outputFormat.set($event)">
+            <option value="">Current Format</option>
+            <option value="csv">CSV</option>
+            <option value="json">JSON</option>
+          </select>
+        </label>
+      </div>
+      <label class="field">
+        <span>Parameters (JSON)</span>
+        <textarea
+          rows="8"
+          [ngModel]="paramsJson()"
+          (ngModelChange)="paramsJson.set($event)"
+          spellcheck="false"
+        ></textarea>
+      </label>
+      <div class="row">
+        <button class="primary" (click)="applyOne()" [disabled]="!canApply()">
+          Apply Transformation
+        </button>
+      </div>
+    </section>
+
+    <section class="card historyPanel">
+      <div class="cardHeader">
+        <h2>Version Timeline</h2>
+        <button class="ghost" (click)="refreshVersions()" [disabled]="busy()">Refresh</button>
+      </div>
+      <div class="row actionRow">
+        <input
+          placeholder="Version name (optional)"
+          [ngModel]="renameVersionName()"
+          (ngModelChange)="renameVersionName.set($event)"
+          [disabled]="busy() || !currentVersionId()"
+        />
+        <button class="ghost" (click)="renameSelectedVersion()" [disabled]="busy() || !currentVersionId()">
+          Rename
+        </button>
+        <button class="ghost" (click)="revertSelectedVersion()" [disabled]="busy() || !currentVersionId()">
+          Revert
+        </button>
+      </div>
+      <div class="versions" *ngIf="versions().length; else noVersions">
+        <button
+          class="version"
+          *ngFor="let v of versionsNewestFirst()"
+          [class.active]="v.id === currentVersionId()"
+          (click)="setCurrentVersion(v.id)"
+          type="button"
+        >
+          <div class="versionTop">
+            <div class="versionNum">{{ v.versionName || ('v' + v.versionNumber) }}</div>
+            <div class="versionMeta">
+              <span class="pill">v{{ v.versionNumber }}</span>
+              <span class="pill">{{ v.format }}</span>
+              <span class="time">{{ v.createdAt }}</span>
+            </div>
+          </div>
+          <div class="versionBottom">
+            <div class="mono"><strong>ID</strong>: {{ v.id }}</div>
+            <div class="mono" *ngIf="v.createdFromVersionId">
+              <strong>From</strong>: {{ v.createdFromVersionId }}
+            </div>
+            <div class="mono" *ngIf="v.transformation">
+              <strong>Step</strong>: {{ v.transformation.type }}
+            </div>
+          </div>
+        </button>
+      </div>
+      <ng-template #noVersions>
+        <p class="subtle">No versions yet.</p>
+      </ng-template>
+    </section>
   </section>
 
   <section class="card" *ngIf="datasetId()">
     <div class="cardHeader">
-      <h2>Transform</h2>
-      <button class="ghost" (click)="refreshTransformations()" [disabled]="busy()">
-        Refresh transformations
-      </button>
+      <h2>Notes</h2>
     </div>
-
-    <div class="grid2">
-      <label class="field">
-        <span>Transformation</span>
-        <select
-          [ngModel]="selectedTransformationType()"
-          (ngModelChange)="selectedTransformationType.set($event)"
-        >
-          <option *ngFor="let t of transformations()" [value]="t.type">
-            {{ t.type }}
-          </option>
-        </select>
-      </label>
-
-      <label class="field">
-        <span>Output format (optional)</span>
-        <select
-          [ngModel]="outputFormat()"
-          (ngModelChange)="outputFormat.set($event)"
-        >
-          <option value="">Current Format</option>
-          <option value="csv">CSV</option>
-          <option value="json">JSON</option>
-        </select>
-      </label>
-    </div>
-
-    <label class="field">
-      <span>Parameters (JSON)</span>
-      <textarea
-        rows="6"
-        [ngModel]="paramsJson()"
-        (ngModelChange)="paramsJson.set($event)"
-        spellcheck="false"
-      ></textarea>
-    </label>
-
-    <div class="row">
-      <button class="primary" (click)="applyOne()" [disabled]="!canApply()">
-        Apply (creates new version)
-      </button>
-    </div>
-  </section>
-
-  <section class="card" *ngIf="datasetId()">
-    <div class="cardHeader">
-      <h2>Version history</h2>
-      <button class="ghost" (click)="refreshVersions()" [disabled]="busy()">
-        Refresh
-      </button>
-    </div>
-
-    <div class="versions" *ngIf="versions().length; else noVersions">
-      <button
-        class="version"
-        *ngFor="let v of versions()"
-        [class.active]="v.id === currentVersionId()"
-        (click)="setCurrentVersion(v.id)"
-        type="button"
-      >
-        <div class="versionTop">
-          <div class="versionNum">v{{ v.versionNumber }}</div>
-          <div class="versionMeta">
-            <span class="pill">{{ v.format }}</span>
-            <span class="time">{{ v.createdAt }}</span>
-          </div>
-        </div>
-        <div class="versionBottom">
-          <div class="mono"><strong>ID</strong>: {{ v.id }}</div>
-          <div class="mono" *ngIf="v.createdFromVersionId">
-            <strong>From</strong>: {{ v.createdFromVersionId }}
-          </div>
-          <div class="mono" *ngIf="v.transformation">
-            <strong>Step</strong>: {{ v.transformation.type }}
-          </div>
-        </div>
-      </button>
-    </div>
-
-    <ng-template #noVersions>
-      <p class="subtle">No versions yet.</p>
-    </ng-template>
-
     <p class="subtle hint">
-      Revert is done by selecting an older version as “current”, then applying more
-      transformations from there (history stays intact).
+      Revert creates a new latest version from the selected version, while keeping the
+      original version and full history intact.
+    </p>
+    <p class="subtle hint" *ngIf="selectedVersion()">
+      Renaming updates only the selected version label (it does not change lineage or data).
     </p>
   </section>
 

@@ -47,6 +47,7 @@ class DatasetVersion(BaseModel):
     versionNumber: int
     format: DatasetFormat
     createdAt: str
+    versionName: Optional[str] = None
     # Parent pointer used to build version lineage (root version has None).
     createdFromVersionId: Optional[str] = None
     transformation: Optional[TransformationRecord] = None
@@ -87,4 +88,9 @@ class ApplyPipelineResponse(BaseModel):
     outputVersionId: str
     createdVersionIds: List[str]
     stepsApplied: List[TransformationRecord]
+
+
+class RenameVersionRequest(BaseModel):
+    """Request payload for assigning a human-friendly version name."""
+    versionName: str
 
