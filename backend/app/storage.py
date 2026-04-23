@@ -118,6 +118,20 @@ def add_version(index: StorageIndex, version: DatasetVersion) -> StorageIndex:
     return index
 
 
+def update_version(index: StorageIndex, version: DatasetVersion) -> StorageIndex:
+    ensure_mongo_indexes()
+    db = mongo_db()
+    db.versions.replace_one({"id": version.id}, version.model_dump(), upsert=True)
+
+    for i, existing in enumerate(index.versions):
+        if existing.id == version.id:
+            index.versions[i] = version
+            return index
+
+    index.versions.append(version)
+    return index
+
+
 def latest_version_for_dataset(index: StorageIndex, dataset_id: str) -> Optional[DatasetVersion]:
     versions = [v for v in index.versions if v.datasetId == dataset_id]
     versions.sort(key=lambda v: v.versionNumber)

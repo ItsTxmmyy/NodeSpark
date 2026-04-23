@@ -38,5 +38,15 @@ export class DataEngineeringApiService {
   }) {
     return await firstValueFrom(this.http.post<any>(`${this.baseUrl}/pipelines/apply`, body));
   }
+
+  async revertVersion(versionId: string) {
+    return await firstValueFrom(this.http.post<any>(`${this.baseUrl}/versions/${versionId}/revert`, {}));
+  }
+
+  async renameVersion(versionId: string, versionName: string) {
+    return await firstValueFrom(
+      this.http.patch<any>(`${this.baseUrl}/versions/${versionId}/name`, { versionName })
+    );
+  }
 }
 
