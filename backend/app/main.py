@@ -8,9 +8,12 @@ from typing import List
 
 import os
 
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, File, HTTPException, UploadFile, Depends
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from .auth import verify_password, create_access_token
 from fastapi.middleware.cors import CORSMiddleware
 import pandas as pd
+from pydantic import BaseModel
 from uuid import uuid4
 
 from .models import (
@@ -42,12 +45,50 @@ app = FastAPI(title="NodeSpark Backend", version="0.1.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:4200"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+class AuthRequest(BaseModel):
+    username: str
+    password: str
+
+# --- AUTHENTICATION ROUTES ---
+
+@app.post("/signup")
+async def signup(user: AuthRequest):
+    """
+    Endpoint for new user registration.
+    Currently prints to console; will be connected to MongoDB.
+    """
+    print(f"New signup attempt: {user.username}")
+    # Logic to save user to MongoDB 'users' collection goes here
+    return {"message": "User created successfully"}
+
+@app.post("/login")
+async def login(user: AuthRequest):
+    """
+    Login endpoint that matches the Angular login.ts call.
+    Uses a hardcoded test user for initial validation.
+    """
+    test_user = {"username": "admin", "password": "password123"}
+    
+    if user.username != test_user["username"] or user.password != test_user["password"]:
+        raise HTTPException(status_code=401, detail="Incorrect username or password")
+
+    access_token = create_access_token(data={"sub": user.username})
+    return {"access_token": access_token, "token_type": "bearer"}
+
+@app.post("/token")
+async def token_login(form_data: OAuth2PasswordRequestForm = Depends()):
+    """Legacy endpoint for OAuth2 compatibility."""
+    if form_data.username != "admin" or form_data.password != "password123":
+        raise HTTPException(status_code=401, detail="Incorrect username or password")
+
+    access_token = create_access_token(data={"sub": form_data.username})
+    return {"access_token": access_token, "token_type": "bearer"}
 
 @app.get("/health")
 def health():
