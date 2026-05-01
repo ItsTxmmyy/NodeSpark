@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 
 import { DataEngineeringApiService } from './data-engineering.service';
 
@@ -58,8 +59,13 @@ export class DataEngineeringPage {
     this.versions().find((v) => v.id === this.currentVersionId()) ?? null
   );
 
-  constructor(private readonly api: DataEngineeringApiService) {
+  constructor(private readonly api: DataEngineeringApiService, private readonly router: Router) {
     this.refreshTransformations().catch(() => {});
+  }
+
+  protected onSignOut() {
+    localStorage.removeItem('token');
+    this.router.navigate(['/']);
   }
 
   protected onFilePicked(e: Event) {
