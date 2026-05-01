@@ -1,0 +1,45 @@
+<div class="login-wrapper">
+  <div class="login-box">
+    <h1>NodeSpark</h1>
+    <p>Please sign in to manage your data pipelines.</p>
+
+    <form (submit)="onLogin()">
+      <div class="input-group">
+        <label for="username">Username</label>
+        <input
+          type="text"
+          id="username"
+          [(ngModel)]="username"
+          name="username"
+          required
+        />
+      </div>
+
+      <div class="input-group">
+        <label for="password">Password</label>
+        <input
+          type="password"
+          id="password"
+          [(ngModel)]="password"
+          name="password"
+          required
+        />
+      </div>
+
+      <button type="submit" class="login-button">Login</button>
+
+      <!-- Error message shows up here if login fails -->
+      <div *ngIf="errorMessage" class="error-msg">
+        {{ errorMessage }}
+      </div>
+
+      <!-- NEW: Link to the Signup Page -->
+      <div class="auth-footer">
+        <p class="subtle">
+          Don't have an account? 
+          <a routerLink="/signup" class="auth-link">Sign up here</a>
+        </p>
+      </div>
+    </form>
+  </div>
+</div>
