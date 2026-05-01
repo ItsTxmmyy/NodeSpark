@@ -1,12 +1,10 @@
-/* Layout Wrapper */
 .shell {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background-color: #0f172a; /* Matches the dark theme */
+  background-color: #0f172a;
 }
 
-/* Restores the Topbar from your screenshot */
 .topbar {
   display: flex;
   justify-content: space-between;
@@ -24,7 +22,6 @@
   font-size: 0.9rem;
 }
 
-/* Restores the button-style link on the right */
 .nav a {
   color: white;
   text-decoration: none;
@@ -40,7 +37,6 @@
   background-color: #334155;
 }
 
-/* Content Area */
 .page {
   flex: 1;
   overflow-y: auto;
