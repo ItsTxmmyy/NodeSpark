@@ -1,0 +1,26 @@
+<div class="login-wrapper">
+  <div class="login-box">
+    <h1>Create Account</h1>
+    <p>Join NodeSpark to start managing pipelines.</p>
+
+    <form (submit)="onSignup()">
+      <div class="input-group">
+        <label for="username">New Username</label>
+        <input type="text" id="username" [(ngModel)]="username" name="username" required>
+      </div>
+
+      <div class="input-group">
+        <label for="password">New Password</label>
+        <input type="password" id="password" [(ngModel)]="password" name="password" required>
+      </div>
+
+      <button type="submit" class="login-button">Sign Up</button>
+      
+      <div *ngIf="errorMessage" class="error-msg">{{ errorMessage }}</div>
+
+      <p class="subtle" style="margin-top: 20px;">
+        Already have an account? <a routerLink="/" style="color: #3b82f6;">Login here</a>
+      </p>
+    </form>
+  </div>
+</div>
