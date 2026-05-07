@@ -23,6 +23,7 @@ class TransformationType(str, Enum):
     null_handling = "null_handling"
     normalize = "normalize"
     convert_format = "convert_format"
+    filter_rows = "filter_rows"
 
 
 class TransformationRecord(BaseModel):
@@ -38,6 +39,8 @@ class Dataset(BaseModel):
     id: str
     name: str
     createdAt: str
+    # JWT `sub` (username) of the account that owns this dataset; scoped reads/writes.
+    ownerId: Optional[str] = None
 
 
 class DatasetVersion(BaseModel):
@@ -93,4 +96,32 @@ class ApplyPipelineResponse(BaseModel):
 class RenameVersionRequest(BaseModel):
     """Request payload for assigning a human-friendly version name."""
     versionName: str
+
+
+# --- AI assistant models ---
+
+
+class AiSuggestStep(BaseModel):
+    """One suggested pipeline step."""
+
+    type: str
+    parameters: Dict[str, Any] = Field(default_factory=dict)
+
+
+class AiSuggestResponse(BaseModel):
+    """Assistant output contract used by ai_assistant.suggest_transformations."""
+
+    steps: List[AiSuggestStep] = Field(default_factory=list)
+    explanation: str = ""
+    assumptions: List[str] = Field(default_factory=list)
+    needsClarification: bool = False
+    clarificationQuestion: Optional[str] = None
+
+
+class AiSuggestRequest(BaseModel):
+    """Request payload for AI pipeline suggestions."""
+
+    inputVersionId: str
+    prompt: str
+    sampleSize: int = 20
 

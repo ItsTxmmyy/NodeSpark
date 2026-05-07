@@ -1,7 +1,71 @@
+.shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #0f172a;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+  background-color: #0f172a;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.brand {
+  color: white;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.9rem;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.nav a {
+  color: white;
+  text-decoration: none;
+  background-color: #1e293b;
+  padding: 6px 16px;
+  border-radius: 8px;
+  border: 1px solid #334155;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+
+.nav a:hover,
+.nav a.active {
+  background-color: #334155;
+}
+
+button.ghost {
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #e2e8f0;
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+button.ghost:hover {
+  background: #334155;
+}
+
 .page {
+  flex: 1;
+  overflow-y: auto;
   max-width: 1100px;
   margin: 0 auto;
   padding: 24px 16px 64px;
+  width: 100%;
 }
 
 .header {
@@ -48,6 +112,10 @@
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 10px;
+}
+
+.cardHeader h2 {
+  margin: 0;
 }
 
 .chip {
@@ -105,6 +173,271 @@ select:focus {
   flex-wrap: wrap;
 }
 
+.flex1 {
+  flex: 1;
+  min-width: 200px;
+}
+
+.viewToggle {
+  display: flex;
+  gap: 8px;
+}
+
+.toggle {
+  border: 1px solid rgba(97, 128, 206, 0.45);
+  background: rgba(11, 19, 42, 0.82);
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.toggle.active {
+  border-color: rgba(56, 189, 248, 0.85);
+  background: rgba(56, 189, 248, 0.15);
+}
+
+.filters {
+  margin-top: 8px;
+}
+
+.compareMeta {
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.compareGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.comparePane {
+  border: 1px solid rgba(97, 128, 206, 0.25);
+  border-radius: 14px;
+  padding: 12px;
+  background: rgba(8, 13, 30, 0.35);
+  min-width: 0;
+}
+
+.paneHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.paneHeader h3 {
+  margin: 0;
+  font-size: 14px;
+  color: #dbe9ff;
+}
+
+.banner {
+  border: 1px solid rgba(97, 128, 206, 0.35);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: rgba(8, 13, 30, 0.56);
+  color: #dbe9ff;
+  margin-top: 12px;
+}
+
+.banner.warning {
+  border-color: rgba(251, 191, 36, 0.45);
+  background: rgba(251, 191, 36, 0.08);
+}
+
+.banner strong {
+  color: #fde68a;
+}
+
+.diffGrid {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.diffCard {
+  border: 1px solid rgba(97, 128, 206, 0.25);
+  border-radius: 14px;
+  padding: 12px;
+  background: rgba(8, 13, 30, 0.35);
+  min-width: 0;
+}
+
+.diffCard h3 {
+  margin: 0 0 8px;
+  font-size: 14px;
+  color: #dbe9ff;
+}
+
+.pillRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0 12px;
+}
+
+.pill {
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(97, 128, 206, 0.35);
+  background: rgba(15, 23, 42, 0.85);
+  color: #dbe9ff;
+}
+
+.pill.added {
+  border-color: rgba(34, 197, 94, 0.45);
+  background: rgba(34, 197, 94, 0.10);
+}
+
+.pill.removed {
+  border-color: rgba(248, 113, 113, 0.45);
+  background: rgba(248, 113, 113, 0.10);
+}
+
+.diffSamples {
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.diffRow {
+  border: 1px solid rgba(97, 128, 206, 0.22);
+  border-radius: 12px;
+  padding: 10px;
+  background: rgba(8, 13, 30, 0.40);
+}
+
+.diffRowHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.diffRowChanges {
+  display: grid;
+  gap: 10px;
+}
+
+.diffChange {
+  display: grid;
+  gap: 6px;
+}
+
+.diffCol {
+  font-size: 12px;
+  color: #b8ebff;
+}
+
+.diffVals {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.diffVal {
+  border: 1px solid rgba(97, 128, 206, 0.22);
+  border-radius: 10px;
+  padding: 8px;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.diffVal .label {
+  font-size: 11px;
+  color: var(--text-soft);
+  min-width: 16px;
+  padding-top: 1px;
+}
+
+.diffVal.a {
+  border-color: rgba(56, 189, 248, 0.28);
+}
+
+.diffVal.b {
+  border-color: rgba(139, 92, 246, 0.28);
+}
+
+.filterActions {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.fieldLabelSpacer {
+  font-size: 12px;
+  visibility: hidden;
+}
+
+.meta {
+  margin: 8px 0 0;
+}
+
+.tableWrap {
+  margin-top: 12px;
+  border: 1px solid rgba(97, 128, 206, 0.35);
+  border-radius: 12px;
+  overflow: auto;
+  max-height: 480px;
+  background: rgba(8, 13, 30, 0.56);
+}
+
+.dataTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.dataTable th,
+.dataTable td {
+  border-bottom: 1px solid rgba(97, 128, 206, 0.25);
+  padding: 8px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.dataTable th {
+  position: sticky;
+  top: 0;
+  background: rgba(15, 23, 42, 0.95);
+  color: #b8ebff;
+  font-weight: 600;
+  z-index: 1;
+}
+
+.dataTable tr:hover td {
+  background: rgba(56, 189, 248, 0.06);
+}
+
+.cardDivider {
+  margin: 20px 0;
+  border-top: 1px solid rgba(97, 128, 206, 0.25);
+}
+
+.rawJson {
+  margin-top: 14px;
+}
+
+.rawJson summary {
+  cursor: pointer;
+  color: var(--text-soft);
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
 button {
   border: 1px solid rgba(97, 128, 206, 0.45);
   background: rgba(11, 19, 42, 0.82);
@@ -148,8 +481,30 @@ pre {
   color: var(--text-soft);
 }
 
+.error {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  color: #fecaca;
+  background: rgba(127, 29, 29, 0.35);
+  border: 1px solid rgba(248, 113, 113, 0.35);
+}
+
 @media (max-width: 900px) {
   .grid2 {
+    grid-template-columns: 1fr;
+  }
+
+  .compareGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .diffGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .diffVals {
     grid-template-columns: 1fr;
   }
 }

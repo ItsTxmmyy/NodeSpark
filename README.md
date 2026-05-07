@@ -88,4 +88,4 @@ Use `sample-data/nodespark_sample.csv` to quickly test:
 - `POST /pipelines/apply`: apply one or more transformation steps
 - `GET /versions/{version_id}`: fetch version metadata
 - `GET /versions/{version_id}/download`: download a stored version
-- `GET /powerbi/{version_id}`: JSON records preview for analytics integrations
+- `GET /versions/{version_id}/records`: JSON records preview for analytics

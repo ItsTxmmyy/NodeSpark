@@ -34,16 +34,21 @@ def mongo_db():
 def ensure_mongo_indexes() -> None:
     db = mongo_db()
     db.datasets.create_index("id", unique=True)
+    db.datasets.create_index("ownerId")
     db.versions.create_index("id", unique=True)
     db.versions.create_index([("datasetId", 1), ("versionNumber", 1)], unique=True)
     db.dataset_versions_data.create_index("versionId", unique=True)
 
 
-def load_index() -> StorageIndex:
+def load_index(owner_id: str) -> StorageIndex:
+    """Load datasets and versions visible to this account (JWT `sub` / ownerId)."""
     ensure_mongo_indexes()
     db = mongo_db()
-    datasets_raw = list(db.datasets.find({}, {"_id": 0}))
-    versions_raw = list(db.versions.find({}, {"_id": 0}))
+    datasets_raw = list(db.datasets.find({"ownerId": owner_id}, {"_id": 0}))
+    dataset_ids = [d["id"] for d in datasets_raw]
+    if not dataset_ids:
+        return StorageIndex(datasets=[], versions=[])
+    versions_raw = list(db.versions.find({"datasetId": {"$in": dataset_ids}}, {"_id": 0}))
     return StorageIndex(
         datasets=[Dataset.model_validate(d) for d in datasets_raw],
         versions=[DatasetVersion.model_validate(v) for v in versions_raw],

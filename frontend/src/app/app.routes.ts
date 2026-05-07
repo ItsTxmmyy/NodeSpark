@@ -27,7 +27,7 @@ export const routes: Routes = [
     path: 'analytics',
     loadComponent: () =>
       import('./pages/analytics/analytics.page').then((m) => m.AnalyticsPage)
-  }
+  },
   { 
     path: '**', 
     redirectTo: '' 

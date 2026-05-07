@@ -22,6 +22,13 @@
   font-size: 0.9rem;
 }
 
+.nav {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 .nav a {
   color: white;
   text-decoration: none;
@@ -33,7 +40,8 @@
   transition: all 0.2s;
 }
 
-.nav a:hover {
+.nav a:hover,
+.nav a.active {
   background-color: #334155;
 }
 

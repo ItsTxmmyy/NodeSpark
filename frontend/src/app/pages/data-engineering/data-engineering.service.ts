@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 
@@ -12,12 +12,21 @@ export class DataEngineeringApiService {
   constructor(private readonly http: HttpClient) {}
 
   errToMessage(e: unknown): string {
-    if (typeof e === 'object' && e && 'message' in e) return String((e as any).message);
+    if (e instanceof HttpErrorResponse) {
+      const d = e.error;
+      if (d && typeof d === 'object' && 'detail' in d) return String((d as { detail: unknown }).detail);
+      return e.message || `HTTP ${e.status}`;
+    }
+    if (typeof e === 'object' && e && 'message' in e) return String((e as { message: unknown }).message);
     return 'Request failed.';
   }
 
   async getTransformations(): Promise<{ transformations: Array<{ type: string; parameters: any }> }> {
     return await firstValueFrom(this.http.get<any>(`${this.baseUrl}/transformations`));
+  }
+
+  async listDatasets(): Promise<Array<{ id: string; name: string; createdAt: string; ownerId?: string | null }>> {
+    return await firstValueFrom(this.http.get<any[]>(`${this.baseUrl}/datasets`));
   }
 
   async createDataset(name: string, format: DatasetFormat, file: File) {
@@ -31,12 +40,32 @@ export class DataEngineeringApiService {
     return await firstValueFrom(this.http.get<any[]>(`${this.baseUrl}/datasets/${datasetId}/versions`));
   }
 
+  async downloadVersionBlob(versionId: string): Promise<Blob> {
+    return await firstValueFrom(
+      this.http.get(`${this.baseUrl}/versions/${versionId}/download`, { responseType: 'blob' })
+    );
+  }
+
   async applyPipeline(body: {
     inputVersionId: string;
     steps: Array<{ type: string; parameters: Record<string, unknown> }>;
     outputFormat?: DatasetFormat;
   }) {
     return await firstValueFrom(this.http.post<any>(`${this.baseUrl}/pipelines/apply`, body));
+  }
+
+  async aiSuggest(body: {
+    inputVersionId: string;
+    prompt: string;
+    sampleSize?: number;
+  }): Promise<{
+    steps: Array<{ type: string; parameters: Record<string, unknown> }>;
+    explanation: string;
+    assumptions: string[];
+    needsClarification: boolean;
+    clarificationQuestion: string | null;
+  }> {
+    return await firstValueFrom(this.http.post<any>(`${this.baseUrl}/ai/suggest`, body));
   }
 
   async revertVersion(versionId: string) {

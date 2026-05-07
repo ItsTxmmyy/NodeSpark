@@ -3,7 +3,7 @@
     <h1>Create Account</h1>
     <p>Join NodeSpark to start managing pipelines.</p>
 
-    <form (submit)="onSignup()">
+    <form (ngSubmit)="onSignup()">
       <div class="input-group">
         <label for="username">New Username</label>
         <input type="text" id="username" [(ngModel)]="username" name="username" required>

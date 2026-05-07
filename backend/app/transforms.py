@@ -28,6 +28,23 @@ def _df_from_bytes(data: bytes, fmt: DatasetFormat) -> pd.DataFrame:
         return pd.read_csv(io.BytesIO(data), dtype=str, keep_default_na=False)
 
 
+def infer_columns_and_sample_rows(
+    data: bytes, fmt: DatasetFormat, sample_size: int = 20
+) -> Tuple[list[str], list[dict[str, Any]]]:
+    """
+    Utility for the AI assistant: infer columns and provide a few sample rows.
+    Sample rows are JSON-serializable dictionaries.
+    """
+    df = _df_from_bytes(data, fmt)
+    columns = [str(c) for c in df.columns.tolist()]
+    sample = df.head(max(0, int(sample_size))).fillna("").to_dict(orient="records")
+    # pandas may emit non-JSON primitives; coerce to basic Python types/strings
+    cleaned: list[dict[str, Any]] = []
+    for row in sample:
+        cleaned.append({str(k): ("" if v is None else v) for k, v in row.items()})
+    return columns, cleaned
+
+
 def _df_to_bytes(df: pd.DataFrame, fmt: DatasetFormat) -> bytes:
     """Serialize DataFrame back to bytes in requested format."""
     if fmt == "json":
@@ -101,6 +118,63 @@ def transform_normalize(df: pd.DataFrame, parameters: Dict[str, Any]) -> pd.Data
     return working
 
 
+def transform_filter_rows(df: pd.DataFrame, parameters: Dict[str, Any]) -> pd.DataFrame:
+    """Filter rows by one column predicate."""
+    column = parameters.get("column") or parameters.get("field")
+    if not isinstance(column, str) or not column.strip():
+        raise ValueError("filter_rows.column must be a non-empty string")
+    if column not in df.columns:
+        raise ValueError(f"filter_rows.column not found: {column}")
+
+    operator = str(parameters.get("operator", "equals")).lower()
+    mode = str(parameters.get("mode", "include")).lower()
+    raw_value = parameters.get("value")
+    value = "" if raw_value is None else str(raw_value)
+
+    s = df[column].astype("string").fillna("")
+    value_s = value
+
+    if operator in ("equals", "eq"):
+        mask = s == value_s
+    elif operator in ("not_equals", "ne"):
+        mask = s != value_s
+    elif operator == "contains":
+        mask = s.str.contains(value_s, case=False, na=False)
+    elif operator == "not_contains":
+        mask = ~s.str.contains(value_s, case=False, na=False)
+    elif operator == "starts_with":
+        mask = s.str.startswith(value_s, na=False)
+    elif operator == "ends_with":
+        mask = s.str.endswith(value_s, na=False)
+    elif operator == "is_empty":
+        mask = s.str.strip() == ""
+    elif operator == "is_not_empty":
+        mask = s.str.strip() != ""
+    elif operator in ("gt", "gte", "lt", "lte"):
+        left = pd.to_numeric(s, errors="coerce")
+        try:
+            right = float(value_s)
+        except ValueError:
+            raise ValueError("filter_rows.value must be numeric for gt/gte/lt/lte")
+        if operator == "gt":
+            mask = left > right
+        elif operator == "gte":
+            mask = left >= right
+        elif operator == "lt":
+            mask = left < right
+        else:
+            mask = left <= right
+    else:
+        raise ValueError(f"unknown filter_rows.operator: {operator}")
+
+    if mode == "exclude":
+        mask = ~mask
+    elif mode != "include":
+        raise ValueError("filter_rows.mode must be 'include' or 'exclude'")
+
+    return df[mask].reset_index(drop=True)
+
+
 def apply_pipeline(
     input_bytes: bytes,
     input_format: DatasetFormat,
@@ -117,6 +191,8 @@ def apply_pipeline(
             df = transform_null_handling(df, params)
         elif step_type == "normalize":
             df = transform_normalize(df, params)
+        elif step_type == "filter_rows":
+            df = transform_filter_rows(df, params)
         elif step_type == "convert_format":
             # No DataFrame mutation needed. Format conversion happens on output serialization.
             pass

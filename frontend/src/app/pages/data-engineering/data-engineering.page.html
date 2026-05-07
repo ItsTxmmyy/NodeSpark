@@ -4,6 +4,7 @@
     <div class="brand">NodeSpark</div>
     <nav class="nav">
       <a routerLink="/data-engineering" routerLinkActive="active">Data Engineering</a>
+      <a routerLink="/analytics" routerLinkActive="active">Analytics</a>
       
       <!-- New Sign Out Button -->
       <button (click)="onSignOut()" class="ghost" style="margin-left: 12px;">
@@ -60,6 +61,29 @@
       </div>
     </section>
 
+    <section class="card" *ngIf="datasets().length">
+      <div class="cardHeader">
+        <h2>Your datasets</h2>
+        <span class="chip">From your account</span>
+      </div>
+      <p class="subtle" style="margin-bottom: 12px;">
+        After signing in again, pick a saved dataset here to continue working. New uploads appear in this list.
+      </p>
+      <label class="field">
+        <span>Open saved dataset</span>
+        <select
+          class="fieldControl"
+          [value]="datasetId() ?? ''"
+          (change)="onOpenExistingDataset($any($event.target).value)"
+        >
+          <option value="">— Select a dataset —</option>
+          <option *ngFor="let d of datasets()" [value]="d.id">
+            {{ d.name }} · {{ d.createdAt | slice:0:10 }}
+          </option>
+        </select>
+      </label>
+    </section>
+
     <section class="uiGrid" *ngIf="datasetId()">
       <section class="card">
         <div class="cardHeader">
@@ -105,6 +129,55 @@
         </div>
       </section>
 
+      <section class="card">
+        <div class="cardHeader">
+          <h2>AI Assistant</h2>
+          <span class="chip">Suggest a pipeline</span>
+        </div>
+        <p class="subtle" style="margin-top: 0;">
+          Describe what you want to do and I’ll suggest transformation steps for the selected version.
+        </p>
+        <label class="field">
+          <span>Prompt</span>
+          <textarea
+            rows="4"
+            [ngModel]="aiPrompt()"
+            (ngModelChange)="aiPrompt.set($event)"
+            [disabled]="aiBusy()"
+            placeholder='e.g. "Deduplicate by email, then remove rows where country is empty"'
+          ></textarea>
+        </label>
+        <div class="row">
+          <button class="primary" (click)="runAiSuggest()" [disabled]="aiBusy() || !currentVersionId()">
+            Suggest steps
+          </button>
+          <button class="ghost" (click)="useFirstAiStep()" [disabled]="aiBusy() || !aiResult()">
+            Use first step
+          </button>
+        </div>
+
+        <div class="error" *ngIf="aiError()">{{ aiError() }}</div>
+
+        <div class="meta" *ngIf="aiResult() as r">
+          <div *ngIf="r.needsClarification" class="subtle" style="margin-bottom: 8px;">
+            <strong>Clarification needed:</strong> {{ r.clarificationQuestion }}
+          </div>
+          <div *ngIf="!r.needsClarification && r.explanation">
+            <strong>Explanation:</strong> {{ r.explanation }}
+          </div>
+          <div *ngIf="r.assumptions?.length" style="margin-top: 8px;">
+            <strong>Assumptions:</strong>
+            <ul style="margin: 6px 0 0 18px;">
+              <li *ngFor="let a of r.assumptions">{{ a }}</li>
+            </ul>
+          </div>
+          <div *ngIf="r.steps?.length" style="margin-top: 10px;">
+            <strong>Suggested steps:</strong>
+            <pre style="margin-top: 6px; white-space: pre-wrap;">{{ r.steps | json }}</pre>
+          </div>
+        </div>
+      </section>
+
       <section class="card historyPanel">
         <div class="cardHeader">
           <h2>Version Timeline</h2>
@@ -122,6 +195,13 @@
           </button>
           <button class="ghost" (click)="revertSelectedVersion()" [disabled]="busy() || !currentVersionId()">
             Revert
+          </button>
+          <button
+            class="ghost"
+            (click)="downloadSelectedVersion()"
+            [disabled]="busy() || downloadBusy() || !currentVersionId()"
+          >
+            Download
           </button>
         </div>
         <div class="versions" *ngIf="versions().length; else noVersions">
