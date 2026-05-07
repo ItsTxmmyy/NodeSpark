@@ -3,6 +3,7 @@ import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {HttpClient, HttpErrorResponse} from '@angular/common/http';
+import { SessionService } from '../../session.service';
 
 type RowRecord = Record<string, any>;
 
@@ -53,17 +54,20 @@ export class AnalyticsPage implements OnInit {
         'Row-by-row diff is best-effort by row index. If rows were filtered/sorted/deduped between versions, alignment can shift.';
     
     backend = 'http://127.0.0.1:8000';
+    isAdmin = false;
 
     constructor(
         private http: HttpClient,
         private router: Router,
+        private session: SessionService,
     ) {}
 
-    ngOnInit() {
+    async ngOnInit() {
         if (!localStorage.getItem('token')) {
             void this.router.navigate(['/']);
             return;
         }
+        this.isAdmin = await this.session.isAdmin();
         this.loadDatasets();
     }
 
@@ -170,6 +174,7 @@ export class AnalyticsPage implements OnInit {
 
     onSignOut() {
         localStorage.removeItem('token');
+        this.session.clear();
         void this.router.navigate(['/']);
     }
 

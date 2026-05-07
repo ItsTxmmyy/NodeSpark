@@ -1,0 +1,236 @@
+.shell {
+  min-height: 100vh;
+  background: #0b1220;
+  color: #e6edf6;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(9, 14, 26, 0.9);
+  position: sticky;
+  top: 0;
+  backdrop-filter: blur(10px);
+}
+
+.brand {
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.nav a {
+  color: rgba(230, 237, 246, 0.85);
+  text-decoration: none;
+  padding: 8px 10px;
+  border-radius: 10px;
+}
+
+.nav a.active {
+  background: rgba(90, 167, 255, 0.14);
+  color: #e6edf6;
+}
+
+.page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 18px;
+}
+
+.header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.titleBlock h1 {
+  margin: 0;
+  font-size: 28px;
+}
+
+.subtle {
+  color: rgba(230, 237, 246, 0.7);
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 14px;
+  margin-bottom: 16px;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.cardDivider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 12px 0;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 220px;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field span {
+  color: rgba(230, 237, 246, 0.7);
+  font-size: 13px;
+}
+
+input,
+select {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #e6edf6;
+  border-radius: 12px;
+  padding: 10px 12px;
+  outline: none;
+}
+
+button {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: #e6edf6;
+  border-radius: 12px;
+  padding: 10px 12px;
+  cursor: pointer;
+}
+
+button.primary {
+  background: rgba(90, 167, 255, 0.18);
+  border-color: rgba(90, 167, 255, 0.35);
+}
+
+button.ghost {
+  background: transparent;
+}
+
+button.danger {
+  border-color: rgba(255, 120, 120, 0.35);
+  background: rgba(255, 120, 120, 0.10);
+}
+
+.error {
+  color: #ffb4b4;
+  margin: 8px 0;
+}
+
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+.pill {
+  display: inline-block;
+  padding: 5px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(230, 237, 246, 0.85);
+  font-size: 12px;
+}
+
+.pill.added {
+  border-color: rgba(96, 240, 170, 0.35);
+  background: rgba(96, 240, 170, 0.12);
+}
+
+.tableWrap {
+  overflow: auto;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.dataTable {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 720px;
+}
+
+.dataTable th,
+.dataTable td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.dataTable th {
+  text-align: left;
+  color: rgba(230, 237, 246, 0.7);
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.versions {
+  display: grid;
+  gap: 10px;
+}
+
+.version {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 12px;
+}
+
+.versionTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.versionNum {
+  font-weight: 650;
+}
+
+.versionMeta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.time {
+  color: rgba(230, 237, 246, 0.6);
+  font-size: 12px;
+}
+
+.versionBottom {
+  margin-top: 8px;
+  color: rgba(230, 237, 246, 0.8);
+  display: grid;
+  gap: 4px;
+}
+
+.filterActions .fieldLabelSpacer {
+  height: 18px;
+}
+

@@ -1,6 +1,8 @@
 import { Routes } from '@angular/router';
 import { LoginComponent } from './login/login';
 import { SignupComponent } from './signup/signup';
+import { adminGuard } from './guards/admin.guard';
+import { AdminPage } from './pages/admin/admin.page';
 
 export const routes: Routes = [
   { 
@@ -27,6 +29,11 @@ export const routes: Routes = [
     path: 'analytics',
     loadComponent: () =>
       import('./pages/analytics/analytics.page').then((m) => m.AnalyticsPage)
+  },
+  {
+    path: 'admin',
+    canActivate: [adminGuard],
+    component: AdminPage
   },
   { 
     path: '**', 

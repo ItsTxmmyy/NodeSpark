@@ -28,7 +28,13 @@ export class SignupComponent {
         this.router.navigate(['/']);
       },
       error: (err) => {
-        this.errorMessage = 'Registration failed. User might already exist.';
+        const detail =
+          err?.error?.detail ||
+          err?.error?.message ||
+          (typeof err?.error === 'string' ? err.error : null);
+        this.errorMessage = detail
+          ? `Registration failed: ${detail}`
+          : 'Registration failed.';
       }
     });
   }

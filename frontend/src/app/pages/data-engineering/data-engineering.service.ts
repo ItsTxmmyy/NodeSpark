@@ -77,5 +77,24 @@ export class DataEngineeringApiService {
       this.http.patch<any>(`${this.baseUrl}/versions/${versionId}/name`, { versionName })
     );
   }
+
+  async listLogs(limit = 50): Promise<
+    Array<{
+      ownerId: string;
+      timestamp: string;
+      event: string;
+      datasetId?: string;
+      versionId?: string;
+      inputVersionId?: string;
+      outputVersionId?: string;
+      sourceVersionId?: string;
+      newVersionId?: string;
+      name?: string;
+      format?: string;
+    }>
+  > {
+    const url = `${this.baseUrl}/logs?limit=${encodeURIComponent(String(limit))}`;
+    return await firstValueFrom(this.http.get<any[]>(url));
+  }
 }
 

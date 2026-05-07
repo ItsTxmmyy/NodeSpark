@@ -38,13 +38,21 @@ def ensure_mongo_indexes() -> None:
     db.versions.create_index("id", unique=True)
     db.versions.create_index([("datasetId", 1), ("versionNumber", 1)], unique=True)
     db.dataset_versions_data.create_index("versionId", unique=True)
+    # Fifth collection: lightweight activity log per account.
+    db.logs.create_index([("ownerId", 1), ("timestamp", -1)])
 
 
-def load_index(owner_id: str) -> StorageIndex:
-    """Load datasets and versions visible to this account (JWT `sub` / ownerId)."""
+def load_index(owner_id: Optional[str]) -> StorageIndex:
+    """
+    Load datasets and versions visible to this account.
+
+    - If owner_id is a string: scope to that ownerId (normal user behavior).
+    - If owner_id is None: load ALL datasets and ALL versions (admin behavior).
+    """
     ensure_mongo_indexes()
     db = mongo_db()
-    datasets_raw = list(db.datasets.find({"ownerId": owner_id}, {"_id": 0}))
+    dataset_query = {} if owner_id is None else {"ownerId": owner_id}
+    datasets_raw = list(db.datasets.find(dataset_query, {"_id": 0}))
     dataset_ids = [d["id"] for d in datasets_raw]
     if not dataset_ids:
         return StorageIndex(datasets=[], versions=[])

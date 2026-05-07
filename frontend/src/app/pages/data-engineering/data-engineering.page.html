@@ -5,6 +5,7 @@
     <nav class="nav">
       <a routerLink="/data-engineering" routerLinkActive="active">Data Engineering</a>
       <a routerLink="/analytics" routerLinkActive="active">Analytics</a>
+      <a *ngIf="isAdmin()" routerLink="/admin" routerLinkActive="active">Admin</a>
       
       <!-- New Sign Out Button -->
       <button (click)="onSignOut()" class="ghost" style="margin-left: 12px;">
@@ -248,6 +249,44 @@
       <p class="subtle hint" *ngIf="selectedVersion()">
         Renaming updates only the selected version label (it does not change lineage or data).
       </p>
+    </section>
+
+    <section class="card" *ngIf="logs().length">
+      <div class="cardHeader">
+        <h2>Recent Activity</h2>
+        <button class="ghost" (click)="refreshLogs()" [disabled]="busy()">Refresh log</button>
+      </div>
+      <p class="subtle" style="margin-top: 0;">
+        Latest actions for your account (most recent first).
+      </p>
+      <div class="versions">
+        <div class="version" *ngFor="let log of logs()">
+          <div class="versionTop">
+            <div class="versionNum">{{ log.event }}</div>
+            <div class="versionMeta">
+              <span class="pill" *ngIf="log.datasetId">dataset: {{ log.datasetId }}</span>
+              <span class="pill" *ngIf="log.versionId || log.outputVersionId">
+                version:
+                {{ log.versionId || log.outputVersionId }}
+              </span>
+              <span class="time">{{ log.timestamp }}</span>
+            </div>
+          </div>
+          <div class="versionBottom mono">
+            <div *ngIf="log.name"><strong>Name</strong>: {{ log.name }}</div>
+            <div *ngIf="log.format"><strong>Format</strong>: {{ log.format }}</div>
+            <div *ngIf="log.inputVersionId">
+              <strong>Input</strong>: {{ log.inputVersionId }}
+            </div>
+            <div *ngIf="log.sourceVersionId">
+              <strong>Source</strong>: {{ log.sourceVersionId }}
+            </div>
+            <div *ngIf="log.newVersionId">
+              <strong>New</strong>: {{ log.newVersionId }}
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
 
     <div class="error" *ngIf="error()">{{ error() }}</div>

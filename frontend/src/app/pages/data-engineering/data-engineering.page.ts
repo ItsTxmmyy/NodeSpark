@@ -4,10 +4,24 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 
 import { DataEngineeringApiService } from './data-engineering.service';
+import { SessionService } from '../../session.service';
 
 type DatasetFormat = 'csv' | 'json';
 
 type DatasetRow = { id: string; name: string; createdAt: string; ownerId?: string | null };
+type LogRow = {
+  ownerId: string;
+  timestamp: string;
+  event: string;
+  datasetId?: string;
+  versionId?: string;
+  inputVersionId?: string;
+  outputVersionId?: string;
+  sourceVersionId?: string;
+  newVersionId?: string;
+  name?: string;
+  format?: string;
+};
 
 @Component({
   selector: 'app-data-engineering-page',
@@ -76,7 +90,14 @@ export class DataEngineeringPage {
   );
   protected readonly downloadBusy = signal(false);
 
-  constructor(private readonly api: DataEngineeringApiService, private readonly router: Router) {
+  protected readonly logs = signal<LogRow[]>([]);
+  protected readonly isAdmin = signal(false);
+
+  constructor(
+    private readonly api: DataEngineeringApiService,
+    private readonly router: Router,
+    private readonly session: SessionService
+  ) {
     if (!localStorage.getItem('token')) {
       void this.router.navigate(['/']);
       return;
@@ -86,7 +107,8 @@ export class DataEngineeringPage {
 
   private async bootstrapData() {
     try {
-      await Promise.all([this.refreshTransformations(), this.loadDatasetsList()]);
+      this.isAdmin.set(await this.session.isAdmin());
+      await Promise.all([this.refreshTransformations(), this.loadDatasetsList(), this.refreshLogs()]);
       const saved = this.datasets();
       if (saved.length === 1) {
         await this.onOpenExistingDataset(saved[0].id);
@@ -102,6 +124,15 @@ export class DataEngineeringPage {
       this.datasets.set(rows ?? []);
     } catch {
       this.datasets.set([]);
+    }
+  }
+
+  protected async refreshLogs() {
+    try {
+      const rows = await this.api.listLogs(50);
+      this.logs.set(rows ?? []);
+    } catch {
+      this.logs.set([]);
     }
   }
 
@@ -136,6 +167,7 @@ export class DataEngineeringPage {
 
   protected onSignOut() {
     localStorage.removeItem('token');
+    this.session.clear();
     this.router.navigate(['/']);
   }
 

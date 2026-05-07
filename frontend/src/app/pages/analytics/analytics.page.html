@@ -4,6 +4,7 @@
     <nav class="nav">
       <a routerLink="/data-engineering" routerLinkActive="active">Data Engineering</a>
       <a routerLink="/analytics" routerLinkActive="active">Analytics</a>
+      <a *ngIf="isAdmin" routerLink="/admin" routerLinkActive="active">Admin</a>
       <button type="button" (click)="onSignOut()" class="ghost">Sign Out</button>
     </nav>
   </header>
